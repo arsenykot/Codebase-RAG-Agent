@@ -1,12 +1,6 @@
-import os
-
-from dotenv import load_dotenv
-from openai import OpenAI
-
 from src.indexing import load_index
+from src.llm import chat_completion
 from src.retrieval import rerank, retrieve
-
-load_dotenv()
 
 
 def answer_question(question):
@@ -33,20 +27,11 @@ def answer_question(question):
         "Ответ:"
     )
 
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if api_key is None or api_key == "":
-        return "Ошибка: добавьте OPENROUTER_API_KEY в .env"
-
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-    response = client.chat.completions.create(
-        model="openrouter/free",
+    answer = chat_completion(
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
-
-    answer = response.choices[0].message.content
-    if answer is None:
-        answer = "Информация не найдена."
+    if answer == "":
+        return "Информация не найдена."
 
     return answer

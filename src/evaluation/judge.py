@@ -1,9 +1,4 @@
-import os
-
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
+from src.llm import chat_completion
 
 
 def judge_response(query, response, reference):
@@ -13,16 +8,7 @@ def judge_response(query, response, reference):
     prompt = prompt + "Эталон: " + reference + "\n"
     prompt = prompt + "Ответ: " + response
 
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-    result = client.chat.completions.create(
-        model="openrouter/free",
+    return chat_completion(
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
-
-    text = result.choices[0].message.content
-    if text is None:
-        text = ""
-    return text

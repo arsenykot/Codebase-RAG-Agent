@@ -11,7 +11,7 @@ RAG-система для анализа кода: загрузка `.py` фай
 ```bash
 pip install -r requirements.txt
 cp .env.example .env
-# Добавьте OPENROUTER_API_KEY в .env
+# Запустите Ollama и скачайте модель: ollama pull llama3.2
 
 # 1. Положите Python-репозиторий в data/repo/ (или data/имя-проекта/)
 # 2. Проиндексируйте и задавайте вопросы:
@@ -43,7 +43,7 @@ python main.py evaluate              # Recall@k + LLM-as-a-Judge
 | Retriever | 15 | `src/retrieval.py` — `similarity_search` |
 | Vector DB | 10 | `src/indexing.py` — FAISS + `all-MiniLM-L6-v2` |
 | Reranking | 10 | `src/retrieval.py` — CrossEncoder top-5 |
-| LLM chain | 15 | `src/generation.py` — retrieve → rerank → prompt → OpenRouter |
+| LLM chain | 15 | `src/generation.py` — retrieve → rerank → prompt → Ollama |
 | Evaluation | 15 | `src/evaluation/` — Recall@k + LLM-as-a-Judge |
 
 ## Архитектура
@@ -51,6 +51,22 @@ python main.py evaluate              # Recall@k + LLM-as-a-Judge
 ```
 repo/*.py → ingestion → chunking → FAISS index
 question → retrieve (k=20) → rerank (top-5) → LLM → answer
+```
+
+## Ollama
+
+По умолчанию агент использует локальный Ollama (`http://localhost:11434/v1`). Настройки в `.env`:
+
+| Переменная | По умолчанию | Описание |
+|------------|--------------|----------|
+| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | URL OpenAI-совместимого API |
+| `OLLAMA_API_KEY` | `ollama` | Любая строка (Ollama не проверяет ключ) |
+| `OLLAMA_MODEL` | `llama3.2` | Имя модели из `ollama list` |
+
+```bash
+ollama pull llama3.2
+ollama serve   # если Ollama ещё не запущен
+python main.py ask
 ```
 
 ## Демо-репозиторий
@@ -75,6 +91,7 @@ src/
 ├── indexing.py
 ├── retrieval.py
 ├── generation.py
+├── llm.py
 └── evaluation/metrics.py, judge.py, test_questions.json
 ```
 
