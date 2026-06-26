@@ -2,11 +2,19 @@ from src.llm import chat_completion
 
 
 def judge_response(query, response, reference):
-    prompt = "Оцени ответ RAG-ассистента по шкале 1-5 (accuracy, completeness, usefulness).\n"
-    prompt = prompt + "Верни JSON.\n\n"
-    prompt = prompt + "Вопрос: " + query + "\n"
-    prompt = prompt + "Эталон: " + reference + "\n"
-    prompt = prompt + "Ответ: " + response
+    prompt = (
+        "Ты работаешь как строгий арбитр и оцениваешь ответ RAG-ассистента по следующим критериям:\n"
+        "1. Точность (насколько ответ точен в сравнении с эталоном),\n"
+        "2. Полнота (насколько полно раскрыт вопрос по сравнению с эталоном),\n"
+        "3. Полезность (насколько этот ответ был бы полезен реальному пользователю).\n"
+        "Дай финальную итоговую ОЦЕНКУ по 5-балльной шкале (5 — идеально совпадает с эталоном, 1 — неверно, бесполезно).\n\n"
+        "Твои действия:\n"
+        "- Прокомментируй свой вывод коротко (1-2 предложения).\n"
+        "- Верни JSON вида: {\"score\": <оценка>, \"comment\": \"...\"}\n\n"
+        "Вопрос:\n" + query + "\n"
+        "Эталонный ответ:\n" + reference + "\n"
+        "Ответ ассистента:\n" + response
+    )
 
     return chat_completion(
         messages=[{"role": "user", "content": prompt}],

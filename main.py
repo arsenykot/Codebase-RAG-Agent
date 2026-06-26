@@ -60,7 +60,6 @@ def cmd_index(repo_path=None):
     print("Получилось чанков:", len(chunks))
 
     build_index(chunks)
-    print("Готово! Индекс в data/faiss_index")
 
 
 def cmd_ask():
@@ -94,10 +93,7 @@ def cmd_evaluate(k, no_judge):
     if no_judge:
         use_judge = False
 
-    results = run_evaluation(k=k, use_judge=use_judge)
-    print()
-    print("=== Итоги ===")
-    print("Recall@" + str(k) + ":", round(results["mean_recall_at_k"] * 100, 1), "%")
+    run_evaluation(k=k, use_judge=use_judge)
 
 
 def main():

@@ -44,7 +44,7 @@ def run_evaluation(k=5, use_judge=True):
                 ans = answer_question(q)
                 judge_text = judge_response(q, ans, reference)
                 judge_results.append({"question": q, "answer": ans, "judge": judge_text})
-                print("  judge:", judge_text[:100])
+                print("  judge:", judge_text)
             except Exception as e:
                 print("  judge error:", e)
 
