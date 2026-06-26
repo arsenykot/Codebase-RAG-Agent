@@ -2,47 +2,36 @@ from pathlib import Path
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
+
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 
-def _data_dir() -> Path:
-    return Path(__file__).resolve().parent.parent / "data"
+def build_index(chunks):
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
-
-def _get_embeddings() -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-
-def build_index(chunks: list[Document], repo_path: str | Path) -> FAISS:
-    embeddings = _get_embeddings()
     vectorstore = FAISS.from_documents(chunks, embeddings)
 
-    index_dir = _data_dir() / "faiss_index"
-    index_dir.mkdir(parents=True, exist_ok=True)
-    vectorstore.save_local(str(index_dir))
-    (_data_dir() / "repo_path.txt").write_text(
-        str(Path(repo_path).resolve()), encoding="utf-8"
-    )
+    base = Path(__file__).resolve().parent.parent / "data"
+    index_path = base / "faiss_index"
+    index_path.mkdir(parents=True, exist_ok=True)
+
+    vectorstore.save_local(str(index_path))
+
     return vectorstore
 
 
-def load_index() -> FAISS:
-    index_dir = _data_dir() / "faiss_index"
-    if not index_dir.exists():
-        raise FileNotFoundError(
-            "FAISS index not found. Run: python main.py index <path_to_repo>"
-        )
+def load_index():
+    base = Path(__file__).resolve().parent.parent / "data"
+    index_path = base / "faiss_index"
 
-    embeddings = _get_embeddings()
-    return FAISS.load_local(
-        str(index_dir),
+    if not index_path.exists():
+        print("Сначала запустите: python main.py index")
+        raise FileNotFoundError("Индекс не найден")
+
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    vectorstore = FAISS.load_local(
+        str(index_path),
         embeddings,
         allow_dangerous_deserialization=True,
     )
-
-
-def get_indexed_repo_path() -> str | None:
-    meta_file = _data_dir() / "repo_path.txt"
-    if meta_file.exists():
-        return meta_file.read_text(encoding="utf-8").strip()
-    return None
+    return vectorstore

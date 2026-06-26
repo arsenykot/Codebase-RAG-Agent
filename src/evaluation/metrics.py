@@ -1,24 +1,34 @@
-from langchain_core.documents import Document
+def recall_at_k(retrieved, expected_file=None, expected_symbol=None, k=5):
+    count = 0
+    for doc in retrieved:
+        if count >= k:
+            break
+        count = count + 1
 
+        fp = doc.metadata.get("file_path", "")
+        sym = doc.metadata.get("symbol_name", "")
 
-def recall_at_k(
-    retrieved: list[Document],
-    expected_file: str | None = None,
-    expected_symbol: str | None = None,
-    k: int = 5,
-) -> float:
-    top_k = retrieved[:k]
-    for doc in top_k:
-        file_path = doc.metadata.get("file_path", "")
-        symbol_name = doc.metadata.get("symbol_name", "")
-        file_match = expected_file is None or expected_file in file_path
-        symbol_match = expected_symbol is None or expected_symbol == symbol_name
-        if file_match and symbol_match:
+        ok_file = True
+        ok_sym = True
+
+        if expected_file is not None:
+            if expected_file not in fp:
+                ok_file = False
+
+        if expected_symbol is not None:
+            if expected_symbol != sym:
+                ok_sym = False
+
+        if ok_file and ok_sym:
             return 1.0
+
     return 0.0
 
 
-def mean_recall_at_k(scores: list[float]) -> float:
-    if not scores:
+def mean_recall_at_k(scores):
+    if len(scores) == 0:
         return 0.0
-    return sum(scores) / len(scores)
+    total = 0.0
+    for s in scores:
+        total = total + s
+    return total / len(scores)

@@ -1,45 +1,37 @@
 from pathlib import Path
 
 
-def _should_skip(path: Path) -> bool:
-    skip_dirs = {
-        ".git",
-        ".venv",
-        "venv",
-        "env",
-        "__pycache__",
-        ".pytest_cache",
-        ".mypy_cache",
-        "node_modules",
-        "lessons",
-        "data",
-    }
-    return any(part in skip_dirs for part in path.parts)
+def load_python_files(repo_path):
+    root = Path(repo_path)
+    if not root.exists():
+        print("Папка не найдена:", repo_path)
+        return []
 
+    files = []
 
-def load_python_files(repo_path: str | Path) -> list[dict]:
-    root = Path(repo_path).resolve()
-    if not root.is_dir():
-        raise ValueError(f"Repository path does not exist: {root}")
+    for file_path in root.rglob("*.py"):
+        rel_path = file_path.relative_to(root)
+        skip = False
 
-    files: list[dict] = []
-    for file_path in sorted(root.rglob("*.py")):
-        if _should_skip(file_path.relative_to(root)):
+        parts = str(rel_path).replace("\\", "/").split("/")
+        for part in parts:
+            if part in [".git", "venv", ".venv", "__pycache__", "lessons", "data", "node_modules"]:
+                skip = True
+                break
+
+        if skip:
             continue
-        try:
-            source = file_path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            source = file_path.read_text(encoding="latin-1")
 
-        files.append(
-            {
-                "file_path": str(file_path.relative_to(root)).replace("\\", "/"),
-                "absolute_path": str(file_path),
-                "source": source,
-            }
-        )
+        f = open(file_path, "r", encoding="utf-8")
+        source = f.read()
+        f.close()
 
-    if not files:
-        raise ValueError(f"No Python files found in repository: {root}")
+        files.append({
+            "file_path": str(rel_path).replace("\\", "/"),
+            "source": source,
+        })
+
+    if len(files) == 0:
+        print("Python файлов не найдено!")
 
     return files

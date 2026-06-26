@@ -1,36 +1,39 @@
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
 from sentence_transformers import CrossEncoder
 
-_cross_encoder: CrossEncoder | None = None
+RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
-def _get_cross_encoder() -> CrossEncoder:
-    global _cross_encoder
-    if _cross_encoder is None:
-        _cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-    return _cross_encoder
+def retrieve(vectorstore, question, k=20):
+    docs = vectorstore.similarity_search(question, k=k)
+    return docs
 
 
-def retrieve(vectorstore: FAISS, question: str, k: int = 20) -> list[Document]:
-    return vectorstore.similarity_search(question, k=k)
-
-
-def rerank(
-    question: str,
-    candidates: list[Document],
-    top_k: int = 5,
-) -> list[Document]:
-    if not candidates:
+def rerank(question, candidates, top_k=5):
+    if len(candidates) == 0:
         return []
 
-    model = _get_cross_encoder()
-    pairs = [(question, doc.page_content) for doc in candidates]
+    model = CrossEncoder(RERANKER_MODEL)
+
+    pairs = []
+    for doc in candidates:
+        pairs.append((question, doc.page_content))
+
     scores = model.predict(pairs)
 
-    ranked = sorted(
-        zip(candidates, scores, strict=True),
-        key=lambda item: item[1],
-        reverse=True,
-    )
-    return [doc for doc, _score in ranked[:top_k]]
+    result = []
+    for i in range(len(candidates)):
+        result.append((candidates[i], scores[i]))
+
+    n = len(result)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if result[j][1] < result[j + 1][1]:
+                temp = result[j]
+                result[j] = result[j + 1]
+                result[j + 1] = temp
+
+    top_docs = []
+    for i in range(min(top_k, len(result))):
+        top_docs.append(result[i][0])
+
+    return top_docs
