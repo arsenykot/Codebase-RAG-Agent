@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data
+data/faiss_index/
+data/repo_path.txt
+data/repo/*
+!data/repo/.gitkeep
+data/*
+!data/README.md
+!data/repo/

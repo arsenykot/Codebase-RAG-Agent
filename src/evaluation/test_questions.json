@@ -1,0 +1,50 @@
+[
+  {
+    "question": "Как загружаются Python-файлы из репозитория?",
+    "expected_file": "src/ingestion.py",
+    "expected_symbol": "load_python_files",
+    "reference_answer": "Функция load_python_files обходит репозиторий через rglob('*.py'), пропускает служебные папки и возвращает список словарей с путём и исходным кодом."
+  },
+  {
+    "question": "Что делает функция chunk_python_file?",
+    "expected_file": "src/chunking.py",
+    "expected_symbol": "chunk_python_file",
+    "reference_answer": "chunk_python_file парсит файл через ast.parse и создаёт отдельные чанки для функций, классов и методов с метаданными file_path, symbol_name и symbol_type."
+  },
+  {
+    "question": "Какой fallback используется если AST-парсинг не удался?",
+    "expected_file": "src/chunking.py",
+    "expected_symbol": "fallback_chunk_file",
+    "reference_answer": "Используется RecursiveCharacterTextSplitter с chunk_size=300 и chunk_overlap=50 из уроков курса."
+  },
+  {
+    "question": "Что делает функция build_index?",
+    "expected_file": "src/indexing.py",
+    "expected_symbol": "build_index",
+    "reference_answer": "build_index создаёт FAISS индекс через HuggingFaceEmbeddings и сохраняет его через vectorstore.save_local в data/faiss_index."
+  },
+  {
+    "question": "Как работает reranking после retrieval?",
+    "expected_file": "src/retrieval.py",
+    "expected_symbol": "rerank",
+    "reference_answer": "Функция rerank использует CrossEncoder ms-marco-MiniLM-L-6-v2, оценивает пары (вопрос, чанк) и возвращает top-5 по score."
+  },
+  {
+    "question": "Какая модель эмбеддингов используется?",
+    "expected_file": "src/indexing.py",
+    "expected_symbol": null,
+    "reference_answer": "В indexing.py задана модель sentence-transformers/all-MiniLM-L6-v2 для HuggingFaceEmbeddings."
+  },
+  {
+    "question": "Как выполняется поиск похожих чанков?",
+    "expected_file": "src/retrieval.py",
+    "expected_symbol": "retrieve",
+    "reference_answer": "retrieve вызывает vectorstore.similarity_search с параметром k (по умолчанию 20)."
+  },
+  {
+    "question": "Как формируется промпт для LLM?",
+    "expected_file": "src/generation.py",
+    "expected_symbol": "answer_question",
+    "reference_answer": "answer_question собирает контекст из reranked чанков, подставляет его в PROMPT_TEMPLATE и отправляет запрос в OpenRouter через OpenAI SDK."
+  }
+]
